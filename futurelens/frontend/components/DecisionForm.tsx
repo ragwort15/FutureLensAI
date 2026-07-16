@@ -23,9 +23,9 @@ export default function DecisionForm({ onSubmit, loading }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-2xl">
-      <label htmlFor="decision" className="mb-2 block font-body text-sm text-ink/70">
+      {/* <label htmlFor="decision" className="mb-2 block font-body text-sm text-ink/70">
         Describe the decision you're weighing
-      </label>
+      </label> */}
       <textarea
         id="decision"
         value={value}

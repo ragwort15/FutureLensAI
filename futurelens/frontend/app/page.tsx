@@ -36,11 +36,17 @@ export default function IntakePage() {
   const labelClass = "mb-1 block font-body text-sm text-ink/70";
 
   return (
-    <main className="flex min-h-screen flex-col items-center px-6 py-16">
+    <main className="flex min-h-screen flex-col items-center px-6 py-16 bg-gradient-to-b from-paper to-signal/40">
       <div className="mb-10 text-center">
         <h1 className="font-display text-4xl text-ink">FutureLens</h1>
-        <p className="mt-2 font-body text-ink/60">Tell us a little about yourself.</p>
+        <p className="mt-2 font-body text-ink/60">
+          Explore the future before making your next big decision.
+        </p>
       </div>
+
+      <p className="mb-4 max-w-xl text-center font-body text-sm text-ink/50">
+        We'll use this to personalize the scenarios we generate for you.
+      </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-4">
         <div>
@@ -54,6 +60,7 @@ export default function IntakePage() {
             id="age"
             type="number"
             min="0"
+            max="80"
             value={age}
             onChange={(e) => setAge(e.target.value)}
             required

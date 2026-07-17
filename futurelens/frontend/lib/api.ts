@@ -49,4 +49,13 @@ export const MOCK_RESPONSE: AnalyzeResponse = {
       evidence: [{ title: "Example source", url: "https://example.com" }],
     },
   ],
+  assumptions: [
+    "You have no major financial constraints preventing relocation.",
+    "Your current role has limited growth ceiling within the next year.",
+    "You're open to a moderate level of short-term disruption for long-term gain.",
+  ],
+  nextQuestions: [
+    "What would change if the new offer included relocation assistance?",
+    "How would this decision differ if you had a 2-year time horizon instead of 1?",
+  ],
 };

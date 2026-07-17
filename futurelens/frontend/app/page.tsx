@@ -3,20 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { LifeStage, saveUserDetails } from "@/lib/userDetails";
+import { Occupation, saveUserDetails } from "@/lib/userDetails";
 
-const LIFE_STAGES: LifeStage[] = ["Student", "Working", "Between roles", "Retired", "Other"];
+const OCCUPATIONS: Occupation[] = ["Student", "Working", "Between roles", "Retired", "Other"];
 
 export default function IntakePage() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
-  const [occupation, setOccupation] = useState("");
+  const [occupation, setOccupation] = useState<Occupation | "">("");
   const [location, setLocation] = useState("");
-  const [lifeStage, setLifeStage] = useState<LifeStage | "">("");
 
-  const isValid =
-    name.trim() && age.trim() && occupation.trim() && location.trim() && lifeStage;
+  const isValid = name.trim() && age.trim() && occupation && location.trim();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -24,9 +22,8 @@ export default function IntakePage() {
     saveUserDetails({
       name: name.trim(),
       age: age.trim(),
-      occupation: occupation.trim(),
+      occupation: occupation as Occupation,
       location: location.trim(),
-      lifeStage: lifeStage as LifeStage,
     });
     router.push("/analyze");
   }
@@ -36,11 +33,17 @@ export default function IntakePage() {
   const labelClass = "mb-1 block font-body text-sm text-ink/70";
 
   return (
-    <main className="flex min-h-screen flex-col items-center px-6 py-16">
+    <main className="flex min-h-screen flex-col items-center px-6 py-16 bg-gradient-to-b from-paper to-signal/40">
       <div className="mb-10 text-center">
         <h1 className="font-display text-4xl text-ink">FutureLens</h1>
-        <p className="mt-2 font-body text-ink/60">Tell us a little about yourself.</p>
+        <p className="mt-2 font-body text-ink/60">
+          Explore the future before making your next big decision.
+        </p>
       </div>
+
+      <p className="mb-4 max-w-xl text-center font-body text-sm text-ink/50">
+        We'll use this to personalize the scenarios we generate for you.
+      </p>
 
       <form onSubmit={handleSubmit} className="w-full max-w-xl space-y-4">
         <div>
@@ -54,6 +57,7 @@ export default function IntakePage() {
             id="age"
             type="number"
             min="0"
+            max="80"
             value={age}
             onChange={(e) => setAge(e.target.value)}
             required
@@ -63,13 +67,18 @@ export default function IntakePage() {
 
         <div>
           <label htmlFor="occupation" className={labelClass}>Occupation</label>
-          <input
+          <select
             id="occupation"
             value={occupation}
-            onChange={(e) => setOccupation(e.target.value)}
+            onChange={(e) => setOccupation(e.target.value as Occupation)}
             required
             className={inputClass}
-          />
+          >
+            <option value="" disabled>Select one…</option>
+            {OCCUPATIONS.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -83,28 +92,12 @@ export default function IntakePage() {
           />
         </div>
 
-        <div>
-          <label htmlFor="lifeStage" className={labelClass}>Life stage</label>
-          <select
-            id="lifeStage"
-            value={lifeStage}
-            onChange={(e) => setLifeStage(e.target.value as LifeStage)}
-            required
-            className={inputClass}
-          >
-            <option value="" disabled>Select one…</option>
-            {LIFE_STAGES.map((stage) => (
-              <option key={stage} value={stage}>{stage}</option>
-            ))}
-          </select>
-        </div>
-
         <button
           type="submit"
           disabled={!isValid}
           className="mt-2 rounded-lg bg-signal px-6 py-3 font-body font-medium text-paper transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          Continue
+          Next
         </button>
       </form>
     </main>

@@ -1,11 +1,10 @@
-export type LifeStage = "Student" | "Working" | "Between roles" | "Retired" | "Other";
+export type Occupation = "Student" | "Working" | "Between roles" | "Retired" | "Other";
 
 export interface UserDetails {
   name: string;
   age: string;
-  occupation: string;
+  occupation: Occupation;
   location: string;
-  lifeStage: LifeStage;
 }
 
 const KEY = "futurelens.userDetails";

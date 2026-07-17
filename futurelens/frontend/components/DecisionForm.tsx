@@ -1,5 +1,6 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 
 const EXAMPLES = [
@@ -10,11 +11,13 @@ const EXAMPLES = [
 
 interface Props {
   onSubmit: (decision: string) => void;
+  onBack: () => void;
   loading: boolean;
+  initialValue?: string;
 }
 
-export default function DecisionForm({ onSubmit, loading }: Props) {
-  const [value, setValue] = useState("");
+export default function DecisionForm({ onSubmit, onBack, loading, initialValue }: Props) {
+  const [value, setValue] = useState(initialValue ?? "");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,13 +51,25 @@ export default function DecisionForm({ onSubmit, loading }: Props) {
         ))}
       </div>
 
-      <button
-        type="submit"
-        disabled={loading || !value.trim()}
-        className="mt-4 rounded-lg bg-signal px-6 py-3 font-body font-medium text-paper transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-      >
-        {loading ? "Simulating futures…" : "See three futures"}
-      </button>
+      <div className="mt-4 flex gap-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1 rounded-lg border border-line px-4 py-3 font-body text-sm text-ink/70 transition hover:border-signal hover:text-signal"
+        >
+          <span aria-hidden="true">←</span>
+          Back
+        </button>
+
+        <button
+          type="submit"
+          disabled={loading || !value.trim()}
+          className="flex items-center gap-2 rounded-lg bg-signal px-6 py-3 font-body font-medium text-paper transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {loading ? "Simulating futures…" : "Submit"}
+        </button>
+      </div>
     </form>
   );
 }

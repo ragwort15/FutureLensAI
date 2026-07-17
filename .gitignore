@@ -1,0 +1,18 @@
+# macOS
+.DS_Store
+
+# Python
+**/.venv/
+**/__pycache__/
+**/*.pyc
+
+# Node
+**/node_modules/
+
+# Next.js
+**/.next/
+**/tsconfig.tsbuildinfo
+
+# Env
+**/.env
+!**/.env.example

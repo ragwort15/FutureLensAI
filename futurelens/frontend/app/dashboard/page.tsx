@@ -1,5 +1,6 @@
 "use client";
 
+import { jsPDF } from "jspdf";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -58,35 +59,86 @@ export default function DashboardPage() {
   function handleDownload() {
     if (!result || !details) return;
 
-    const lines = [
-      `FutureLens analysis for ${details.name}`,
-      `${details.occupation} · ${details.location}`,
-      "",
-      "Question",
-      result.decision,
-      "",
-      "Summary",
-      result.summary,
-      "",
-      ...result.scenarios.flatMap((s) => [
-        `${s.title} (score: ${Math.round(s.score)})`,
-        s.narrative,
-        ...(s.risks.length > 0 ? ["Risks:", ...s.risks.map((r) => `- ${r}`)] : []),
-        "",
-      ]),
-      "Assumptions",
-      ...(result.assumptions && result.assumptions.length > 0
-        ? result.assumptions.map((a) => `- ${a}`)
-        : ["None provided."]),
-    ];
+    const doc = new jsPDF({ unit: "pt", format: "letter" });
+    const marginX = 54;
+    const marginTop = 60;
+    const marginBottom = 60;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const contentWidth = pageWidth - marginX * 2;
+    let y = marginTop;
 
-    const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "futurelens-analysis.txt";
-    a.click();
-    URL.revokeObjectURL(url);
+    function ensureSpace(needed: number) {
+      if (y + needed > pageHeight - marginBottom) {
+        doc.addPage();
+        y = marginTop;
+      }
+    }
+
+    function writeParagraph(text: string, options: { size?: number; bold?: boolean; color?: [number, number, number]; gap?: number; leading?: number } = {}) {
+      const size = options.size ?? 11;
+      const leading = options.leading ?? size * 1.4;
+      const gap = options.gap ?? 6;
+      doc.setFont("helvetica", options.bold ? "bold" : "normal");
+      doc.setFontSize(size);
+      doc.setTextColor(...(options.color ?? [21, 23, 38]));
+      const lines = doc.splitTextToSize(text, contentWidth) as string[];
+      for (const line of lines) {
+        ensureSpace(leading);
+        doc.text(line, marginX, y);
+        y += leading;
+      }
+      y += gap;
+    }
+
+    function writeHeading(text: string, size = 14) {
+      ensureSpace(size * 1.6);
+      writeParagraph(text, { size, bold: true, color: [61, 90, 128], gap: 4 });
+    }
+
+    function writeDivider() {
+      ensureSpace(12);
+      doc.setDrawColor(218, 215, 206);
+      doc.line(marginX, y, marginX + contentWidth, y);
+      y += 12;
+    }
+
+    writeParagraph("FutureLens", { size: 22, bold: true, color: [21, 23, 38], gap: 2 });
+    writeParagraph(`Analysis for ${details.name}`, { size: 11, color: [90, 90, 100], gap: 2 });
+    writeParagraph(
+      `${details.lifeStage} · ${details.location}`,
+      { size: 10, color: [120, 120, 130], gap: 12 },
+    );
+    writeDivider();
+
+    writeHeading("Question");
+    writeParagraph(result.decision, { gap: 14 });
+
+    writeHeading("Summary");
+    writeParagraph(result.summary, { gap: 14 });
+
+    writeHeading("Scenarios");
+    for (const s of result.scenarios) {
+      writeParagraph(`${s.title}  —  score ${Math.round(s.score)}/100`, { bold: true, size: 12, gap: 4 });
+      writeParagraph(s.narrative, { gap: 6 });
+      if (s.risks.length > 0) {
+        writeParagraph("Risks", { bold: true, size: 10, color: [238, 150, 75], gap: 2 });
+        for (const r of s.risks) writeParagraph(`•  ${r}`, { size: 10, gap: 2 });
+      }
+      if (s.evidence && s.evidence.length > 0) {
+        writeParagraph("Evidence", { bold: true, size: 10, color: [90, 90, 100], gap: 2 });
+        for (const e of s.evidence) writeParagraph(`•  ${e.title} — ${e.url}`, { size: 9, color: [90, 90, 100], gap: 2 });
+      }
+      y += 6;
+    }
+
+    if (result.assumptions && result.assumptions.length > 0) {
+      writeHeading("Assumptions");
+      for (const a of result.assumptions) writeParagraph(`•  ${a}`, { gap: 2 });
+    }
+
+    const safeName = details.name.replace(/\s+/g, "-").toLowerCase() || "report";
+    doc.save(`futurelens-${safeName}.pdf`);
   }
 
   if (!details || !result) return null;
@@ -269,11 +321,11 @@ export default function DashboardPage() {
                 <dd className="font-body text-sm font-medium text-ink">{details.age}</dd>
               </div>
               <div className="flex items-center justify-between border-b border-line pb-3">
-                <dt className="font-body text-sm text-ink/60">Occupation</dt>
-                <dd className="font-body text-sm font-medium text-ink">{details.occupation}</dd>
+                <dt className="font-body text-sm text-ink/60">Life stage</dt>
+                <dd className="font-body text-sm font-medium text-ink">{details.lifeStage}</dd>
               </div>
               <div className="flex items-center justify-between">
-                <dt className="font-body text-sm text-ink/60">Location</dt>
+                <dt className="font-body text-sm text-ink/60">Country</dt>
                 <dd className="font-body text-sm font-medium text-ink">{details.location}</dd>
               </div>
             </dl>

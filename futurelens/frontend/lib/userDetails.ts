@@ -1,10 +1,37 @@
-export type Occupation = "Student" | "Working" | "Between roles" | "Retired" | "Other";
+export type LifeStage =
+  | "Student"
+  | "Working"
+  | "Between roles"
+  | "Business owner"
+  | "Retired"
+  | "Homemaker"
+  | "Freelancer"
+  | "Architect"
+  | "Designer"
+  | "Interior decorator"
+  | "Engineer"
+  | "Other";
+
+export const LIFE_STAGES: LifeStage[] = [
+  "Student",
+  "Working",
+  "Between roles",
+  "Business owner",
+  "Freelancer",
+  "Homemaker",
+  "Architect",
+  "Designer",
+  "Interior decorator",
+  "Engineer",
+  "Retired",
+  "Other",
+];
 
 export interface UserDetails {
   name: string;
   age: string;
-  occupation: Occupation;
   location: string;
+  lifeStage: LifeStage;
 }
 
 const KEY = "futurelens.userDetails";

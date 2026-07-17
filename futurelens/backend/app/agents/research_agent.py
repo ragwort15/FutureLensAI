@@ -9,26 +9,29 @@ agents can condition on.
 from langchain_google_genai import ChatGoogleGenerativeAI
 from tavily import TavilyClient
 
+from app.agents._user import user_block
 from app.config import GEMINI_API_KEY, TAVILY_API_KEY
 
 _tavily = TavilyClient(api_key=TAVILY_API_KEY)
-_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=GEMINI_API_KEY)
+_llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", google_api_key=GEMINI_API_KEY)
 
 CONTEXT_PROMPT = """You are a research analyst. A user is weighing the following decision:
 
 "{decision}"
 
+{user}
 Below are web search results related to this decision. Distill them into a short
 (3-5 sentence) factual brief covering the most relevant context, trends, or data
-points a decision-maker should know. Do not give an opinion or recommendation —
-just the facts.
+points a decision-maker should know. If the decision-maker's details are provided
+above, prioritize context that is relevant to their situation. Do not give an
+opinion or recommendation — just the facts.
 
 Search results:
 {results}
 """
 
 
-def run_research(decision: str) -> dict:
+def run_research(decision: str, user: dict | None = None) -> dict:
     """
     Returns:
         {
@@ -44,7 +47,11 @@ def run_research(decision: str) -> dict:
     evidence = [{"title": r["title"], "url": r["url"]} for r in results]
     results_text = "\n".join(f"- {r['title']}: {r.get('content', '')[:300]}" for r in results)
 
-    prompt = CONTEXT_PROMPT.format(decision=decision, results=results_text or "No results found.")
+    prompt = CONTEXT_PROMPT.format(
+        decision=decision,
+        user=user_block(user),
+        results=results_text or "No results found.",
+    )
     response = _llm.invoke(prompt)
 
     return {

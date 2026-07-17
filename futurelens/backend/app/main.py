@@ -25,7 +25,10 @@ def analyze(request: DecisionRequest):
     graph = get_graph()
 
     try:
-        result = graph.invoke({"decision": request.decision})
+        result = graph.invoke({
+            "decision": request.decision,
+            "user": request.user.model_dump() if request.user else None,
+        })
     except Exception as exc:
         # TODO(backend): narrow this down once real failure modes show up
         # (Tavily timeout vs. Gemini JSON parse failure need different messages).

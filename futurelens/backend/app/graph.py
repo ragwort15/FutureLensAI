@@ -17,8 +17,9 @@ from app.agents.research_agent import run_research
 from app.agents.scenario_agent import run_scenarios
 
 
-class PipelineState(TypedDict):
+class PipelineState(TypedDict, total=False):
     decision: str
+    user: dict | None
     context: str
     evidence: list[dict]
     scenarios: list[dict]
@@ -27,17 +28,17 @@ class PipelineState(TypedDict):
 
 
 def research_node(state: PipelineState) -> dict:
-    result = run_research(state["decision"])
+    result = run_research(state["decision"], state.get("user"))
     return {"context": result["context"], "evidence": result["evidence"]}
 
 
 def scenario_node(state: PipelineState) -> dict:
-    scenarios = run_scenarios(state["decision"], state["context"])
+    scenarios = run_scenarios(state["decision"], state["context"], state.get("user"))
     return {"scenarios": scenarios}
 
 
 def evaluation_node(state: PipelineState) -> dict:
-    result = run_evaluation(state["decision"], state["scenarios"])
+    result = run_evaluation(state["decision"], state["scenarios"], state.get("user"))
     return {"scores": result["scores"], "summary": result["summary"]}
 
 
@@ -45,12 +46,12 @@ def build_graph():
     graph = StateGraph(PipelineState)
 
     graph.add_node("research", research_node)
-    graph.add_node("scenarios", scenario_node)
+    graph.add_node("scenario", scenario_node)
     graph.add_node("evaluation", evaluation_node)
 
     graph.set_entry_point("research")
-    graph.add_edge("research", "scenarios")
-    graph.add_edge("scenarios", "evaluation")
+    graph.add_edge("research", "scenario")
+    graph.add_edge("scenario", "evaluation")
     graph.add_edge("evaluation", END)
 
     return graph.compile()

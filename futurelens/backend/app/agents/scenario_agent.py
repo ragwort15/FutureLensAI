@@ -10,19 +10,23 @@ import json
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from app.agents._user import user_block
 from app.config import GEMINI_API_KEY
 
-_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=GEMINI_API_KEY)
+_llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", google_api_key=GEMINI_API_KEY)
 
 SCENARIO_PROMPT = """You are simulating plausible futures for a decision.
 
 Decision: "{decision}"
 
+{user}
 Context: {context}
 
 Generate exactly 3 distinct, plausible scenarios for how this could play out.
 Make them meaningfully different from each other (e.g. best case, likely case,
 worst case — or three genuinely different paths, whichever fits the decision).
+If details about the decision-maker are given above, tailor the scenarios,
+narratives, and risks to their age, occupation, location, and life stage.
 
 Respond with ONLY valid JSON, no markdown fences, in this exact shape:
 [
@@ -36,11 +40,11 @@ Respond with ONLY valid JSON, no markdown fences, in this exact shape:
 """
 
 
-def run_scenarios(decision: str, context: str) -> list[dict]:
+def run_scenarios(decision: str, context: str, user: dict | None = None) -> list[dict]:
     """
     Returns a list of 3 dicts: {"title": str, "narrative": str, "risks": [str, ...]}
     """
-    prompt = SCENARIO_PROMPT.format(decision=decision, context=context)
+    prompt = SCENARIO_PROMPT.format(decision=decision, context=context, user=user_block(user))
     response = _llm.invoke(prompt)
 
     # TODO(backend): this is the most fragile part of the pipeline — Gemini

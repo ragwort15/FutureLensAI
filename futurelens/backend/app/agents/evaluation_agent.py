@@ -1,8 +1,9 @@
 """
 Evaluation agent — merges "Evaluation" + "Explanation" from the original design.
 
-Scores each scenario, writes a comparison summary, extracts the assumptions
-behind the analysis, and suggests useful follow-up questions.
+Scores each scenario, breaks the score down by per-decision factors, writes a
+comparison summary + one-sentence verdict, extracts the assumptions behind the
+analysis, and suggests useful follow-up questions.
 """
 
 import json
@@ -22,26 +23,37 @@ Decision: "{decision}"
 Scenarios:
 {scenarios}
 
-Do five things:
+Do six things:
 1. Assign a score from 0-100 to each scenario representing overall favorability
    for this specific decision-maker (weighing upside against the listed risks
    in light of their situation, if provided).
-2. Write a 2-3 sentence summary comparing all three scenarios and the key
+2. Break each scenario's score down by factor. Pick 3-4 short factor labels
+   yourself based on what's relevant to this specific decision (e.g. "Salary",
+   "Risk", "Growth" for a job decision; "Cost", "Time commitment", "Skill fit"
+   for another) — do not reuse a fixed list across unrelated decisions. Use the
+   SAME set of factor labels, in the same order, for all 3 scenarios so they
+   can be compared side by side, and score each factor 0-100 per scenario.
+3. Write a 2-3 sentence summary comparing all three scenarios and the key
    tradeoff between them.
-3. Write a ONE-SENTENCE VERDICT — the direct answer to the user's question.
+4. Write a ONE-SENTENCE VERDICT — the direct answer to the user's question.
    Start with a clear "Yes", "No", "Not yet", or "It depends —" and then a
    short reason. Speak directly to the user in second person ("you"). This
    is what they'll read first, so make it crisp and honest.
-4. List 2-4 key ASSUMPTIONS your analysis rests on (things you took as given
+5. List 2-4 key ASSUMPTIONS your analysis rests on (things you took as given
    about the decision-maker or context — e.g. "assumed a 1-year horizon",
    "assumed no major family constraints", "assumed relocation is feasible").
-5. Suggest 2-3 useful follow-up questions the decision-maker could ask to
+6. Suggest 2-3 useful follow-up questions the decision-maker could ask to
    pressure-test or refine this analysis.
 {extra_instruction}
 
 Respond with ONLY valid JSON, no markdown fences, in this exact shape:
 {{
   "scores": [<score1>, <score2>, <score3>],
+  "breakdowns": [
+    [{{"label": "<factor 1>", "value": <0-100>}}, ...],
+    [{{"label": "<factor 1>", "value": <0-100>}}, ...],
+    [{{"label": "<factor 1>", "value": <0-100>}}, ...]
+  ],
   "summary": "2-3 sentence comparison",
   "verdict": "One sentence starting with Yes/No/Not yet/It depends —",
   "assumptions": ["...", "..."],
@@ -60,7 +72,9 @@ def run_evaluation(
     """
     Returns: {
         "scores": [float, float, float],
+        "breakdowns": [[{"label", "value"}, ...], ...],
         "summary": str,
+        "verdict": str,
         "assumptions": [str, ...],
         "next_questions": [str, ...],
     }
@@ -86,6 +100,7 @@ def run_evaluation(
     data = json.loads(text)
     return {
         "scores": data.get("scores", []),
+        "breakdowns": data.get("breakdowns", []),
         "summary": data.get("summary", ""),
         "verdict": data.get("verdict", ""),
         "assumptions": data.get("assumptions", []),

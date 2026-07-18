@@ -6,12 +6,18 @@ export interface Evidence {
   url: string;
 }
 
+export interface ScoreFactor {
+  label: string;
+  value: number;
+}
+
 export interface ScenarioResult {
   title: string;
   narrative: string;
   score: number; // 0-100
   risks: string[];
   evidence: Evidence[];
+  scoreBreakdown?: ScoreFactor[]; // per-decision factor labels chosen by the AI
 }
 
 export interface AnalyzeResponse {

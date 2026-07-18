@@ -26,6 +26,7 @@ class PipelineState(TypedDict, total=False):
     evidence: list[dict]
     scenarios: list[dict]
     scores: list[float]
+    breakdowns: list[list[dict]]
     summary: str
     verdict: str
     assumptions: list[str]
@@ -54,6 +55,7 @@ def evaluation_node(state: PipelineState) -> dict:
     )
     return {
         "scores": result["scores"],
+        "breakdowns": result.get("breakdowns", []),
         "summary": result["summary"],
         "verdict": result.get("verdict", ""),
         "assumptions": result.get("assumptions", []),

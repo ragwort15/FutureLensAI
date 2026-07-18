@@ -25,6 +25,57 @@ export async function analyzeDecision(
 
 export const MOCK_RESPONSE: AnalyzeResponse = {
   decision: "Should I take a job offer in a new city or stay in my current role?",
-  summary: "",
-  scenarios: [],
+  summary:
+    "The new-city offer has the strongest upside but carries relocation risk; staying put is the safest floor but caps growth.",
+  verdict: "Yes — take the offer, since the growth ceiling in your current role is capped and the disruption is manageable.",
+  scenarios: [
+    {
+      title: "Take the offer",
+      narrative:
+        "You relocate, ramp up over 3 months, and the broader scope accelerates your career meaningfully within a year.",
+      score: 78,
+      risks: ["Relocation costs and disruption", "New team fit is unproven"],
+      evidence: [{ title: "Example source", url: "https://example.com" }],
+      scoreBreakdown: [
+        { label: "Salary", value: 82 },
+        { label: "Risk", value: 55 },
+        { label: "Growth", value: 90 },
+      ],
+    },
+    {
+      title: "Stay and negotiate",
+      narrative:
+        "You stay, use the offer as leverage, and gain a smaller but immediate improvement in scope and compensation.",
+      score: 64,
+      risks: ["Leverage may not translate to real change", "Opportunity may not come again"],
+      evidence: [{ title: "Example source", url: "https://example.com" }],
+      scoreBreakdown: [
+        { label: "Salary", value: 60 },
+        { label: "Risk", value: 75 },
+        { label: "Growth", value: 58 },
+      ],
+    },
+    {
+      title: "Decline and stay",
+      narrative:
+        "You decline outright, keep stability, and continue on your current trajectory without disruption.",
+      score: 52,
+      risks: ["Slower growth", "Regret if the door doesn't reopen"],
+      evidence: [{ title: "Example source", url: "https://example.com" }],
+      scoreBreakdown: [
+        { label: "Salary", value: 50 },
+        { label: "Risk", value: 88 },
+        { label: "Growth", value: 30 },
+      ],
+    },
+  ],
+  assumptions: [
+    "You have no major financial constraints preventing relocation.",
+    "Your current role has limited growth ceiling within the next year.",
+    "You're open to a moderate level of short-term disruption for long-term gain.",
+  ],
+  nextQuestions: [
+    "What would change if the new offer included relocation assistance?",
+    "How would this decision differ if you had a 2-year time horizon instead of 1?",
+  ],
 };

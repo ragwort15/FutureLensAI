@@ -28,10 +28,10 @@ def analyze(request: DecisionRequest):
         result = graph.invoke({
             "decision": request.decision,
             "user": request.user.model_dump() if request.user else None,
+            "clarify": request.clarifyAnswers or None,
+            "decision_context": request.decisionContext or None,
         })
     except Exception as exc:
-        # TODO(backend): narrow this down once real failure modes show up
-        # (Tavily timeout vs. Gemini JSON parse failure need different messages).
         raise HTTPException(status_code=502, detail=f"Pipeline failed: {exc}") from exc
 
     scenarios = [
@@ -49,4 +49,7 @@ def analyze(request: DecisionRequest):
         decision=request.decision,
         scenarios=scenarios,
         summary=result["summary"],
+        verdict=result.get("verdict", "") or "",
+        assumptions=result.get("assumptions", []) or [],
+        nextQuestions=result.get("next_questions", []) or [],
     )

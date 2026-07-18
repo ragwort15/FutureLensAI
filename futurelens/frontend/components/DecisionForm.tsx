@@ -14,10 +14,26 @@ interface Props {
   onBack: () => void;
   loading: boolean;
   initialValue?: string;
+  onDecisionChange?: (value: string) => void;
+  submitDisabled?: boolean;
+  extraContent?: React.ReactNode;
 }
 
-export default function DecisionForm({ onSubmit, onBack, loading, initialValue }: Props) {
+export default function DecisionForm({
+  onSubmit,
+  onBack,
+  loading,
+  initialValue,
+  onDecisionChange,
+  submitDisabled,
+  extraContent,
+}: Props) {
   const [value, setValue] = useState(initialValue ?? "");
+
+  function setDecision(next: string) {
+    setValue(next);
+    onDecisionChange?.(next);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,7 +48,7 @@ export default function DecisionForm({ onSubmit, onBack, loading, initialValue }
       <textarea
         id="decision"
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => setDecision(e.target.value)}
         rows={3}
         placeholder="e.g. Should I take a job offer in a new city or stay in my current role?"
         className="w-full resize-none rounded-lg border border-line bg-white p-4 font-body text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-signal"
@@ -43,13 +59,15 @@ export default function DecisionForm({ onSubmit, onBack, loading, initialValue }
           <button
             key={example}
             type="button"
-            onClick={() => setValue(example)}
+            onClick={() => setDecision(example)}
             className="rounded-full border border-line px-3 py-1 font-body text-xs text-ink/70 transition hover:border-signal hover:text-signal"
           >
             {example.length > 42 ? example.slice(0, 42) + "…" : example}
           </button>
         ))}
       </div>
+
+      {extraContent}
 
       <div className="mt-4 flex gap-2">
         <button
@@ -63,7 +81,7 @@ export default function DecisionForm({ onSubmit, onBack, loading, initialValue }
 
         <button
           type="submit"
-          disabled={loading || !value.trim()}
+          disabled={loading || !value.trim() || submitDisabled}
           className="flex items-center gap-2 rounded-lg bg-signal px-6 py-3 font-body font-medium text-paper transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}

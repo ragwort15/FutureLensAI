@@ -18,25 +18,7 @@ export interface AnalyzeResponse {
   decision: string;
   scenarios: ScenarioResult[];
   summary: string;
-}
-
-export interface Evidence {
-  title: string;
-  url: string;
-}
-
-export interface ScenarioResult {
-  title: string;
-  narrative: string;
-  score: number; // 0-100
-  risks: string[];
-  evidence: Evidence[];
-}
-
-export interface AnalyzeResponse {
-  decision: string;
-  scenarios: ScenarioResult[];
-  summary: string;
-  assumptions?: string[];       // NEW — optional, backend may not send this yet
-  nextQuestions?: string[];     // NEW — optional, backend may not send this yet
+  verdict?: string;
+  assumptions?: string[];
+  nextQuestions?: string[];
 }

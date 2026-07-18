@@ -1,11 +1,15 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-import { loadAnalysisResult, savePrefillDecision } from "@/lib/analysisResult";
+import { analyzeDecision } from "@/lib/api";
+import { loadAnalysisResult, savePrefillDecision, saveAnalysisResult } from "@/lib/analysisResult";
+import { loadClarifyAnswers } from "@/lib/clarifyingQuestions";
+import { COLLEGE_FIELDS, categorizeDecision } from "@/lib/decisionContext";
 import { AnalyzeResponse } from "@/lib/types";
 import { UserDetails, loadUserDetails } from "@/lib/userDetails";
 
@@ -27,6 +31,11 @@ export default function DashboardPage() {
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [customQuestions, setCustomQuestions] = useState<string[]>([]);
   const [customQuestionInput, setCustomQuestionInput] = useState("");
+  const [showVerdict, setShowVerdict] = useState(false);
+  const [showCollegeFinder, setShowCollegeFinder] = useState(false);
+  const [collegeAnswers, setCollegeAnswers] = useState<Record<string, string>>({});
+  const [refining, setRefining] = useState(false);
+  const [refineError, setRefineError] = useState<string | null>(null);
 
   useEffect(() => {
     const d = loadUserDetails();
@@ -42,6 +51,40 @@ export default function DashboardPage() {
     setDetails(d);
     setResult(r);
   }, [router]);
+
+  const category = useMemo(
+    () => (result ? categorizeDecision(result.decision) : "generic"),
+    [result],
+  );
+
+  const collegeVisibleFields = COLLEGE_FIELDS.filter(
+    (f) => !f.showIf || f.showIf(collegeAnswers),
+  );
+  const collegeMissing = collegeVisibleFields.some(
+    (f) => !f.optional && !(collegeAnswers[f.id] ?? "").trim(),
+  );
+
+  function updateCollege(id: string, value: string) {
+    setCollegeAnswers((prev) => ({ ...prev, [id]: value }));
+  }
+
+  async function handleFindColleges() {
+    if (!details || !result || collegeMissing) return;
+    setRefining(true);
+    setRefineError(null);
+    try {
+      const clarify = loadClarifyAnswers() ?? {};
+      const merged = { ...collegeAnswers };
+      const data = await analyzeDecision(result.decision, details, clarify, merged);
+      saveAnalysisResult(data);
+      setResult(data);
+      setShowCollegeFinder(false);
+    } catch (err) {
+      setRefineError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setRefining(false);
+    }
+  }
 
   function askThis(question: string) {
     savePrefillDecision(question);
@@ -193,6 +236,40 @@ export default function DashboardPage() {
           </p>
         </div>
 
+        {result.verdict && (
+          <div>
+            <SectionLabel>Your decision</SectionLabel>
+            {!showVerdict ? (
+              <button
+                type="button"
+                onClick={() => setShowVerdict(true)}
+                className="group flex w-full items-center justify-between rounded-2xl border border-signal bg-signal px-6 py-5 font-body text-paper shadow-lg shadow-signal/25 transition hover:brightness-110"
+              >
+                <span className="text-left">
+                  <span className="block font-display text-lg">Reveal your decision</span>
+                  <span className="mt-0.5 block font-body text-xs text-paper/70">
+                    A one-sentence verdict based on your situation.
+                  </span>
+                </span>
+                <span className="text-2xl transition group-hover:translate-x-1" aria-hidden="true">→</span>
+              </button>
+            ) : (
+              <div className={`${cardClass} border-l-4 border-l-signal p-6`}>
+                <p className="font-display text-xl leading-snug text-ink">
+                  {result.verdict}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setShowVerdict(false)}
+                  className="mt-3 font-body text-xs text-ink/50 hover:text-ink"
+                >
+                  Hide
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div>
           <SectionLabel>Summary</SectionLabel>
           <p className={`${cardClass} p-4 font-body leading-relaxed text-ink/80`}>
@@ -281,6 +358,93 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+        {category === "education" && (
+          <div className={`${cardClass} border-l-4 border-l-signal p-6`}>
+            {!showCollegeFinder ? (
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-display text-lg text-ink">
+                    Ready to look at specific colleges?
+                  </p>
+                  <p className="mt-1 font-body text-sm text-ink/60">
+                    If you&apos;re leaning toward going ahead, tell us your field and priority — we&apos;ll recommend concrete schools and states.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCollegeFinder(true)}
+                  className="shrink-0 rounded-lg bg-signal px-5 py-2.5 font-body text-sm font-medium text-paper shadow-sm transition hover:brightness-110"
+                >
+                  Find my best colleges →
+                </button>
+              </div>
+            ) : (
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <p className="font-display text-lg text-ink">Find my best colleges</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowCollegeFinder(false)}
+                    className="font-body text-xs text-ink/50 hover:text-ink"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {collegeVisibleFields.map((f) => (
+                    <div key={f.id} className={f.type === "text" && !f.optional ? "sm:col-span-2" : ""}>
+                      <label
+                        htmlFor={`college-${f.id}`}
+                        className="mb-1.5 block font-body text-sm font-medium text-ink/80"
+                      >
+                        {f.label}
+                        {f.optional && <span className="ml-1 text-ink/40">(optional)</span>}
+                      </label>
+                      {f.type === "select" ? (
+                        <select
+                          id={`college-${f.id}`}
+                          value={collegeAnswers[f.id] ?? ""}
+                          onChange={(e) => updateCollege(f.id, e.target.value)}
+                          className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 font-body text-ink focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/30"
+                        >
+                          <option value="" disabled>Select one…</option>
+                          {f.options?.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          id={`college-${f.id}`}
+                          type="text"
+                          value={collegeAnswers[f.id] ?? ""}
+                          onChange={(e) => updateCollege(f.id, e.target.value)}
+                          className="w-full rounded-lg border border-line bg-white px-3.5 py-2.5 font-body text-ink focus:border-signal focus:outline-none focus:ring-2 focus:ring-signal/30"
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleFindColleges}
+                    disabled={collegeMissing || refining}
+                    className="flex items-center gap-2 rounded-lg bg-signal px-5 py-2.5 font-body text-sm font-medium text-paper shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {refining && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                    {refining ? "Finding colleges…" : "Recommend colleges"}
+                  </button>
+                </div>
+                {refineError && (
+                  <p className="mt-3 rounded-lg border border-ember/40 bg-ember/10 p-2.5 font-body text-xs text-ember">
+                    {refineError}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="h-px w-full bg-gradient-to-r from-transparent via-line to-transparent" />
 

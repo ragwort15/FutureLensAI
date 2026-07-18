@@ -20,26 +20,45 @@ from app.agents.scenario_agent import run_scenarios
 class PipelineState(TypedDict, total=False):
     decision: str
     user: dict | None
+    clarify: dict | None
+    decision_context: dict | None
     context: str
     evidence: list[dict]
     scenarios: list[dict]
     scores: list[float]
     summary: str
+    verdict: str
+    assumptions: list[str]
+    next_questions: list[str]
 
 
 def research_node(state: PipelineState) -> dict:
-    result = run_research(state["decision"], state.get("user"))
+    result = run_research(
+        state["decision"], state.get("user"), state.get("clarify"), state.get("decision_context")
+    )
     return {"context": result["context"], "evidence": result["evidence"]}
 
 
 def scenario_node(state: PipelineState) -> dict:
-    scenarios = run_scenarios(state["decision"], state["context"], state.get("user"))
+    scenarios = run_scenarios(
+        state["decision"], state["context"], state.get("user"),
+        state.get("clarify"), state.get("decision_context"),
+    )
     return {"scenarios": scenarios}
 
 
 def evaluation_node(state: PipelineState) -> dict:
-    result = run_evaluation(state["decision"], state["scenarios"], state.get("user"))
-    return {"scores": result["scores"], "summary": result["summary"]}
+    result = run_evaluation(
+        state["decision"], state["scenarios"], state.get("user"),
+        state.get("clarify"), state.get("decision_context"),
+    )
+    return {
+        "scores": result["scores"],
+        "summary": result["summary"],
+        "verdict": result.get("verdict", ""),
+        "assumptions": result.get("assumptions", []),
+        "next_questions": result.get("next_questions", []),
+    }
 
 
 def build_graph():

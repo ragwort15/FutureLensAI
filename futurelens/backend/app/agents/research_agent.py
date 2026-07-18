@@ -13,7 +13,7 @@ from app.agents._user import user_block
 from app.config import GEMINI_API_KEY, TAVILY_API_KEY
 
 _tavily = TavilyClient(api_key=TAVILY_API_KEY)
-_llm = ChatGoogleGenerativeAI(model="gemini-flash-latest", google_api_key=GEMINI_API_KEY)
+_llm = ChatGoogleGenerativeAI(model="gemini-flash-lite-latest", google_api_key=GEMINI_API_KEY)
 
 CONTEXT_PROMPT = """You are a research analyst. A user is weighing the following decision:
 
@@ -31,7 +31,12 @@ Search results:
 """
 
 
-def run_research(decision: str, user: dict | None = None) -> dict:
+def run_research(
+    decision: str,
+    user: dict | None = None,
+    clarify: dict | None = None,
+    decision_context: dict | None = None,
+) -> dict:
     """
     Returns:
         {
@@ -49,7 +54,7 @@ def run_research(decision: str, user: dict | None = None) -> dict:
 
     prompt = CONTEXT_PROMPT.format(
         decision=decision,
-        user=user_block(user),
+        user=user_block(user, clarify, decision_context),
         results=results_text or "No results found.",
     )
     response = _llm.invoke(prompt)

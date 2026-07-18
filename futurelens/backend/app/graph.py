@@ -24,6 +24,7 @@ class PipelineState(TypedDict, total=False):
     evidence: list[dict]
     scenarios: list[dict]
     scores: list[float]
+    breakdowns: list[list[dict]]
     summary: str
 
 
@@ -39,7 +40,7 @@ def scenario_node(state: PipelineState) -> dict:
 
 def evaluation_node(state: PipelineState) -> dict:
     result = run_evaluation(state["decision"], state["scenarios"], state.get("user"))
-    return {"scores": result["scores"], "summary": result["summary"]}
+    return {"scores": result["scores"], "breakdowns": result["breakdowns"], "summary": result["summary"]}
 
 
 def build_graph():

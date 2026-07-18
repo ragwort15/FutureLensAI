@@ -6,23 +6,9 @@ export interface Evidence {
   url: string;
 }
 
-export interface ScenarioResult {
-  title: string;
-  narrative: string;
-  score: number; // 0-100
-  risks: string[];
-  evidence: Evidence[];
-}
-
-export interface AnalyzeResponse {
-  decision: string;
-  scenarios: ScenarioResult[];
-  summary: string;
-}
-
-export interface Evidence {
-  title: string;
-  url: string;
+export interface ScoreFactor {
+  label: string;
+  value: number;
 }
 
 export interface ScenarioResult {
@@ -31,6 +17,7 @@ export interface ScenarioResult {
   score: number; // 0-100
   risks: string[];
   evidence: Evidence[];
+  scoreBreakdown?: ScoreFactor[]; // NEW — optional, backend may not send this yet. Factor labels are AI-generated per-decision, not fixed.
 }
 
 export interface AnalyzeResponse {

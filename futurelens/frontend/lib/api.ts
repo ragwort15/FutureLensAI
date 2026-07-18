@@ -31,6 +31,11 @@ export const MOCK_RESPONSE: AnalyzeResponse = {
       score: 78,
       risks: ["Relocation costs and disruption", "New team fit is unproven"],
       evidence: [{ title: "Example source", url: "https://example.com" }],
+      scoreBreakdown: [
+        { label: "Salary", value: 82 },
+        { label: "Risk", value: 55 },
+        { label: "Growth", value: 90 },
+      ],
     },
     {
       title: "Stay and negotiate",
@@ -39,6 +44,11 @@ export const MOCK_RESPONSE: AnalyzeResponse = {
       score: 64,
       risks: ["Leverage may not translate to real change", "Opportunity may not come again"],
       evidence: [{ title: "Example source", url: "https://example.com" }],
+      scoreBreakdown: [
+        { label: "Salary", value: 60 },
+        { label: "Risk", value: 75 },
+        { label: "Growth", value: 58 },
+      ],
     },
     {
       title: "Decline and stay",
@@ -47,6 +57,11 @@ export const MOCK_RESPONSE: AnalyzeResponse = {
       score: 52,
       risks: ["Slower growth", "Regret if the door doesn't reopen"],
       evidence: [{ title: "Example source", url: "https://example.com" }],
+      scoreBreakdown: [
+        { label: "Salary", value: 50 },
+        { label: "Risk", value: 88 },
+        { label: "Growth", value: 30 },
+      ],
     },
   ],
   assumptions: [

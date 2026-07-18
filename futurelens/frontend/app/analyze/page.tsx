@@ -6,12 +6,10 @@ import { useEffect, useState } from "react";
 
 import DecisionForm from "@/components/DecisionForm";
 import PageShell from "@/components/PageShell";
-import { MOCK_RESPONSE, analyzeDecision } from "@/lib/api";
+import { analyzeDecision } from "@/lib/api";
 import { consumePrefillDecision, saveAnalysisResult } from "@/lib/analysisResult";
 import { loadClarifyAnswers } from "@/lib/clarifyingQuestions";
 import { UserDetails, loadUserDetails } from "@/lib/userDetails";
-
-const USE_MOCK = true;
 
 export default function AnalyzePage() {
   const router = useRouter();
@@ -36,7 +34,7 @@ export default function AnalyzePage() {
     setLoading(true);
     setError(null);
     try {
-      const data = USE_MOCK ? MOCK_RESPONSE : await analyzeDecision(decision);
+      const data = await analyzeDecision(decision);
       saveAnalysisResult(data);
       router.push("/dashboard");
     } catch (err) {

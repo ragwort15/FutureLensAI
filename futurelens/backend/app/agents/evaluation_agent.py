@@ -27,9 +27,22 @@ for this specific decision-maker (weighing upside against the listed risks in
 light of their situation, if provided). Then write a 2-3 sentence summary
 comparing all three scenarios and what the key tradeoff is between them.
 
+Also break each scenario's score down by factor, so the factors that actually
+matter for THIS decision. Pick 3-4 short factor labels yourself based on what's
+relevant to this specific decision (e.g. "Salary", "Risk", "Growth" for a job
+decision; "Cost", "Time commitment", "Skill fit" for a different kind of
+decision) — do not reuse a fixed list across unrelated decisions. Use the SAME
+set of factor labels, in the same order, for all 3 scenarios so they can be
+compared side by side, and score each factor 0-100 per scenario.
+
 Respond with ONLY valid JSON, no markdown fences, in this exact shape:
 {{
   "scores": [<score for scenario 1>, <score for scenario 2>, <score for scenario 3>],
+  "breakdowns": [
+    [{{"label": "<factor 1>", "value": <0-100>}}, {{"label": "<factor 2>", "value": <0-100>}}, ...],
+    [{{"label": "<factor 1>", "value": <0-100>}}, {{"label": "<factor 2>", "value": <0-100>}}, ...],
+    [{{"label": "<factor 1>", "value": <0-100>}}, {{"label": "<factor 2>", "value": <0-100>}}, ...]
+  ],
   "summary": "2-3 sentence comparison"
 }}
 """
@@ -37,7 +50,7 @@ Respond with ONLY valid JSON, no markdown fences, in this exact shape:
 
 def run_evaluation(decision: str, scenarios: list[dict], user: dict | None = None) -> dict:
     """
-    Returns: {"scores": [float, float, float], "summary": str}
+    Returns: {"scores": [float, float, float], "breakdowns": [[{"label", "value"}, ...], ...], "summary": str}
     """
     scenarios_text = "\n".join(
         f"{i+1}. {s['title']}: {s['narrative']} (risks: {', '.join(s['risks'])})"
@@ -52,4 +65,6 @@ def run_evaluation(decision: str, scenarios: list[dict], user: dict | None = Non
         text = text.split("\n", 1)[1] if "\n" in text else text
         text = text.rsplit("```", 1)[0] if "```" in text else text
 
-    return json.loads(text)
+    result = json.loads(text)
+    result.setdefault("breakdowns", [])
+    return result
